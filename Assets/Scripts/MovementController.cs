@@ -14,11 +14,16 @@ public class MovementController : MonoBehaviour
 	[SerializeField] private Collider2D m_CrouchDisableCollider;				// A collider that will be disabled when crouching
 
 	const float k_GroundedRadius = .2f; // Radius of the overlap circle to determine if grounded
-	private bool m_Grounded;            // Whether or not the player is grounded.
 	const float k_CeilingRadius = .2f; // Radius of the overlap circle to determine if the player can stand up
+	private bool _isGrounded;            // Whether or not the player is grounded.
+	private bool _wasRunning = false;
+
+	private Animator _animator;
+	
+	
 	private Rigidbody2D m_Rigidbody2D;
 	private bool m_FacingRight = true;  // For determining which way the player is currently facing.
-	private Vector3 m_Velocity = Vector3.zero;
+	private Vector3 _Velocity = Vector3.zero;
 
 	[Header("Events")]
 	[Space]
@@ -29,11 +34,12 @@ public class MovementController : MonoBehaviour
 	public class BoolEvent : UnityEvent<bool> { }
 
 	public BoolEvent OnCrouchEvent;
-	private bool m_wasCrouching = false;
+	private bool _wasCrouching = false;
 
 	private void Awake()
 	{
 		m_Rigidbody2D = GetComponent<Rigidbody2D>();
+		_animator = GetComponent<Animator>();	
 
 		if (OnLandEvent == null)
 			OnLandEvent = new UnityEvent();
@@ -44,8 +50,8 @@ public class MovementController : MonoBehaviour
 
 	private void FixedUpdate()
 	{
-		bool wasGrounded = m_Grounded;
-		m_Grounded = false;
+		bool wasGrounded = _isGrounded;
+		_isGrounded = false;
 
 		// The player is grounded if a circlecast to the groundcheck position hits anything designated as ground
 		// This can be done using layers instead but Sample Assets will not overwrite your project settings.
@@ -54,11 +60,14 @@ public class MovementController : MonoBehaviour
 		{
 			if (colliders[i].gameObject != gameObject)
 			{
-				m_Grounded = true;
+				_isGrounded = true;
 				if (!wasGrounded)
 					OnLandEvent.Invoke();
 			}
 		}
+		
+		if (_isGrounded && !wasGrounded)
+			_animator.SetBool("Grounded", true);
 	}
 
 
@@ -75,16 +84,16 @@ public class MovementController : MonoBehaviour
 		}
 
 		//only control the player if grounded or airControl is turned on
-		if (m_Grounded || m_AirControl)
+		if (_isGrounded || m_AirControl)
 		{
 
 			// If crouching
 			if (crouch)
 			{
-				if (!m_wasCrouching)
+				if (!_wasCrouching)
 				{
-					m_wasCrouching = true;
-					OnCrouchEvent.Invoke(true);
+					_wasCrouching = true;
+					_animator.SetBool("Crounch", true);
 				}
 
 				// Reduce the speed by the crouchSpeed multiplier
@@ -99,37 +108,52 @@ public class MovementController : MonoBehaviour
 				if (m_CrouchDisableCollider != null)
 					m_CrouchDisableCollider.enabled = true;
 
-				if (m_wasCrouching)
+				if (_wasCrouching)
 				{
-					m_wasCrouching = false;
-					OnCrouchEvent.Invoke(false);
+					_wasCrouching = false;
+					_animator.SetBool("Crounch", false);
 				}
 			}
 
 			// Move the character by finding the target velocity
 			Vector3 targetVelocity = new Vector2(move * 10f, m_Rigidbody2D.velocity.y);
-			// And then smoothing it out and applying it to the character
-			m_Rigidbody2D.velocity = Vector3.SmoothDamp(m_Rigidbody2D.velocity, targetVelocity, ref m_Velocity, m_MovementSmoothing);
-
-			// If the input is moving the player right and the player is facing left...
-			if (move > 0 && !m_FacingRight)
+			m_Rigidbody2D.velocity = Vector3.SmoothDamp(m_Rigidbody2D.velocity, targetVelocity, ref _Velocity, m_MovementSmoothing);
+			//Debug.Log(m_Rigidbody2D.velocity.y);
+			_animator.SetFloat("JumpVelocity", m_Rigidbody2D.velocity.y); 
+			
+			// Anims 
+			if (move == 0)
 			{
-				// ... flip the player.
+				if (_wasRunning)
+				{
+					_animator.SetBool("Running", false);
+					_wasRunning = false; 
+				}
+			}
+			else
+			{
+				if (!_wasRunning)
+				{
+					_animator.SetBool("Running", true);
+					_wasRunning = true; 
+				}
+			}
+			
+			// Flip sides 
+			if ( (move > 0 && !m_FacingRight) || (move < 0 && m_FacingRight))
+			{
 				Flip();
 			}
-			// Otherwise if the input is moving the player left and the player is facing right...
-			else if (move < 0 && m_FacingRight)
-			{
-				// ... flip the player.
-				Flip();
-			}
+				
+			
 		}
-		// If the player should jump...
-		if (m_Grounded && jump)
+		
+		if (_isGrounded && jump)
 		{
 			// Add a vertical force to the player.
-			m_Grounded = false;
+			_isGrounded = false;
 			m_Rigidbody2D.AddForce(new Vector2(0f, m_JumpForce));
+			_animator.SetBool("Grounded", false);
 		}
 	}
 

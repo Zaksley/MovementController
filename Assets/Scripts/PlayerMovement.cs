@@ -9,6 +9,8 @@ public class PlayerMovement : MonoBehaviour
 
     [SerializeField] 
     private float _movementSpeed = 40f;
+    
+    
 
     private float _horizontalMove = 0f;
     private bool _jump = false;

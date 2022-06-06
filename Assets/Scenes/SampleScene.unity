@@ -138,6 +138,7 @@ GameObject:
   - component: {fileID: 23176521}
   - component: {fileID: 23176520}
   - component: {fileID: 23176522}
+  - component: {fileID: 23176523}
   m_Layer: 6
   m_Name: Player
   m_TagString: Untagged
@@ -248,7 +249,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0.0001437068, y: -0.48160464}
+  m_Offset: {x: -0.0017157942, y: -0.543898}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -259,7 +260,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 0.43365896, y: 0.84062696}
+  m_Size: {x: 0.422502, y: 0.96521354}
   m_EdgeRadius: 0
 --- !u!114 &23176520
 MonoBehaviour:
@@ -282,7 +283,7 @@ MonoBehaviour:
     m_Bits: 55
   m_GroundCheck: {fileID: 538006919}
   m_CeilingCheck: {fileID: 1992209854}
-  m_CrouchDisableCollider: {fileID: 0}
+  m_CrouchDisableCollider: {fileID: 23176519}
   OnLandEvent:
     m_PersistentCalls:
       m_Calls: []
@@ -298,7 +299,7 @@ CircleCollider2D:
   m_GameObject: {fileID: 23176515}
   m_Enabled: 1
   m_Density: 1
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: 94dcfeaa6f27fcd4d93a215e2f3b3b44, type: 2}
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
@@ -319,6 +320,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   controller: {fileID: 23176520}
   _movementSpeed: 40
+--- !u!95 &23176523
+Animator:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 23176515}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: feec87eb09323c147bea30e96f78272d, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorControllerStateOnDisable: 0
 --- !u!850595691 &413806280
 LightingSettings:
   m_ObjectHideFlags: 0
@@ -759,7 +780,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 5, y: 0, z: 0}
+  - first: {x: 5, y: -1, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 13
@@ -769,7 +790,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 6, y: 0, z: 0}
+  - first: {x: 6, y: -1, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 6
@@ -779,7 +800,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 7, y: 0, z: 0}
+  - first: {x: 7, y: -1, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 7
@@ -789,7 +810,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 8, y: 0, z: 0}
+  - first: {x: 8, y: -1, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 3
