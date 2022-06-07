@@ -19,7 +19,14 @@ public class MovementController : MonoBehaviour
 	private bool _wasRunning = false;
 
 	private Animator _animator;
-	
+	private Action _action; 
+	private enum Action
+	{
+		IDLE = 0,
+		CROUCH = 1, 
+		JUMP = 2,
+		MANDATORY_CROUNCH = 3,
+	}; 
 	
 	private Rigidbody2D m_Rigidbody2D;
 	private bool m_FacingRight = true;  // For determining which way the player is currently facing.
@@ -39,7 +46,8 @@ public class MovementController : MonoBehaviour
 	private void Awake()
 	{
 		m_Rigidbody2D = GetComponent<Rigidbody2D>();
-		_animator = GetComponent<Animator>();	
+		_animator = GetComponent<Animator>();
+		_action = Action.IDLE; 
 
 		if (OnLandEvent == null)
 			OnLandEvent = new UnityEvent();
@@ -73,6 +81,8 @@ public class MovementController : MonoBehaviour
 
 	public void Move(float move, bool crouch, bool jump)
 	{
+		_action = Action.IDLE;
+		
 		// If crouching, check to see if the character can stand up
 		if (!crouch)
 		{
@@ -80,54 +90,52 @@ public class MovementController : MonoBehaviour
 			if (Physics2D.OverlapCircle(m_CeilingCheck.position, k_CeilingRadius, m_WhatIsGround))
 			{
 				crouch = true;
+				PriorityAction(Action.MANDATORY_CROUNCH);
 			}
 		}
-
-		//only control the player if grounded or airControl is turned on
+		
+		if (jump)
+			PriorityAction(Action.JUMP);
+		
+		
 		if (_isGrounded || m_AirControl)
 		{
-
-			// If crouching
-			if (crouch)
+			if (_action <= Action.CROUCH)
 			{
-				if (!_wasCrouching)
+				if (crouch)
 				{
-					_wasCrouching = true;
-					_animator.SetBool("Crounch", true);
-				}
+					if (!_wasCrouching)
+					{
+						_wasCrouching = true;
+						_animator.SetBool("Crouch", true);
+					}
+				
+					move *= m_CrouchSpeed;
 
-				// Reduce the speed by the crouchSpeed multiplier
-				move *= m_CrouchSpeed;
-
-				// Disable one of the colliders when crouching
-				if (m_CrouchDisableCollider != null)
-					m_CrouchDisableCollider.enabled = false;
-			} else
-			{
-				// Enable the collider when not crouching
-				if (m_CrouchDisableCollider != null)
-					m_CrouchDisableCollider.enabled = true;
-
-				if (_wasCrouching)
+					// Disable one of the colliders when crouching
+					if (m_CrouchDisableCollider != null)
+						m_CrouchDisableCollider.enabled = false;
+				} 
+				else
 				{
-					_wasCrouching = false;
-					_animator.SetBool("Crounch", false);
-				}
+					// Enable the collider when not crouching
+					if (m_CrouchDisableCollider != null)
+						m_CrouchDisableCollider.enabled = true;
+
+					if (_wasCrouching)
+					{
+						_wasCrouching = false;
+						_animator.SetBool("Crouch", false);
+					}
+				}	
 			}
 
-			// Move the character by finding the target velocity
-			Vector3 targetVelocity = new Vector2(move * 10f, m_Rigidbody2D.velocity.y);
-			m_Rigidbody2D.velocity = Vector3.SmoothDamp(m_Rigidbody2D.velocity, targetVelocity, ref _Velocity, m_MovementSmoothing);
-			//Debug.Log(m_Rigidbody2D.velocity.y);
-			_animator.SetFloat("JumpVelocity", m_Rigidbody2D.velocity.y); 
-			
-			// Anims 
 			if (move == 0)
 			{
 				if (_wasRunning)
 				{
 					_animator.SetBool("Running", false);
-					_wasRunning = false; 
+					_wasRunning = false;
 				}
 			}
 			else
@@ -138,16 +146,22 @@ public class MovementController : MonoBehaviour
 					_wasRunning = true; 
 				}
 			}
-			
-			// Flip sides 
-			if ( (move > 0 && !m_FacingRight) || (move < 0 && m_FacingRight))
-			{
-				Flip();
-			}
-				
-			
 		}
 		
+		// Move the character by finding the target velocity
+		Vector3 targetVelocity = new Vector2(move * 10f, m_Rigidbody2D.velocity.y);
+		m_Rigidbody2D.velocity = Vector3.SmoothDamp(m_Rigidbody2D.velocity, targetVelocity, ref _Velocity, m_MovementSmoothing);
+		//Debug.Log(m_Rigidbody2D.velocity.y);
+		_animator.SetFloat("JumpVelocity", m_Rigidbody2D.velocity.y); 
+		
+
+		
+		// Flip sides 
+		if ( (move > 0 && !m_FacingRight) || (move < 0 && m_FacingRight))
+		{
+			Flip();
+		}
+			
 		if (_isGrounded && jump)
 		{
 			// Add a vertical force to the player.
@@ -155,6 +169,7 @@ public class MovementController : MonoBehaviour
 			m_Rigidbody2D.AddForce(new Vector2(0f, m_JumpForce));
 			_animator.SetBool("Grounded", false);
 		}
+
 	}
 
 
@@ -168,4 +183,10 @@ public class MovementController : MonoBehaviour
 		theScale.x *= -1;
 		transform.localScale = theScale;
 	}
+
+	private void PriorityAction(Action checkPriority)
+	{
+		_action = (_action > checkPriority) ? _action : checkPriority; 
+	}
+	
 }
