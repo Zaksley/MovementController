@@ -16,6 +16,8 @@ public class MovementController : MonoBehaviour
 	const float k_GroundedRadius = .2f; // Radius of the overlap circle to determine if grounded
 	const float k_CeilingRadius = .2f; // Radius of the overlap circle to determine if the player can stand up
 	private bool _isGrounded;            // Whether or not the player is grounded.
+	private bool _wasGrounded = true; 
+	
 	private bool _wasRunning = false;
 
 	private Animator _animator;
@@ -58,7 +60,7 @@ public class MovementController : MonoBehaviour
 
 	private void FixedUpdate()
 	{
-		bool wasGrounded = _isGrounded;
+		_wasGrounded = _isGrounded;
 		_isGrounded = false;
 
 		// The player is grounded if a circlecast to the groundcheck position hits anything designated as ground
@@ -69,38 +71,31 @@ public class MovementController : MonoBehaviour
 			if (colliders[i].gameObject != gameObject)
 			{
 				_isGrounded = true;
-				if (!wasGrounded)
+				if (!_wasGrounded)
 					OnLandEvent.Invoke();
 			}
 		}
-		
-		if (_isGrounded && !wasGrounded)
-			_animator.SetBool("Grounded", true);
 	}
 
 
 	public void Move(float move, bool crouch, bool jump)
 	{
-		_action = Action.IDLE;
 		
-		// If crouching, check to see if the character can stand up
-		if (!crouch)
+		// If the character has a ceiling preventing them from standing up, keep them crouching
+		if (Physics2D.OverlapCircle(m_CeilingCheck.position, k_CeilingRadius, m_WhatIsGround))
 		{
-			// If the character has a ceiling preventing them from standing up, keep them crouching
-			if (Physics2D.OverlapCircle(m_CeilingCheck.position, k_CeilingRadius, m_WhatIsGround))
-			{
-				crouch = true;
-				PriorityAction(Action.MANDATORY_CROUNCH);
-			}
+			crouch = true;
+			PriorityAction(Action.MANDATORY_CROUNCH);
 		}
-		
-		if (jump)
+
+
+		if (jump && _action <= Action.JUMP)
 			PriorityAction(Action.JUMP);
 		
 		
 		if (_isGrounded || m_AirControl)
 		{
-			if (_action <= Action.CROUCH)
+			if (_action == Action.MANDATORY_CROUNCH || _action <= Action.CROUCH)
 			{
 				if (crouch)
 				{
@@ -108,17 +103,16 @@ public class MovementController : MonoBehaviour
 					{
 						_wasCrouching = true;
 						_animator.SetBool("Crouch", true);
+						//OnCrouchEvent.Invoke(true);
 					}
 				
 					move *= m_CrouchSpeed;
-
-					// Disable one of the colliders when crouching
+					
 					if (m_CrouchDisableCollider != null)
 						m_CrouchDisableCollider.enabled = false;
 				} 
 				else
 				{
-					// Enable the collider when not crouching
 					if (m_CrouchDisableCollider != null)
 						m_CrouchDisableCollider.enabled = true;
 
@@ -126,6 +120,7 @@ public class MovementController : MonoBehaviour
 					{
 						_wasCrouching = false;
 						_animator.SetBool("Crouch", false);
+						OnCrouchEvent.Invoke(true);
 					}
 				}	
 			}
@@ -148,26 +143,24 @@ public class MovementController : MonoBehaviour
 			}
 		}
 		
-		// Move the character by finding the target velocity
 		Vector3 targetVelocity = new Vector2(move * 10f, m_Rigidbody2D.velocity.y);
 		m_Rigidbody2D.velocity = Vector3.SmoothDamp(m_Rigidbody2D.velocity, targetVelocity, ref _Velocity, m_MovementSmoothing);
-		//Debug.Log(m_Rigidbody2D.velocity.y);
 		_animator.SetFloat("JumpVelocity", m_Rigidbody2D.velocity.y); 
 		
 
 		
-		// Flip sides 
-		if ( (move > 0 && !m_FacingRight) || (move < 0 && m_FacingRight))
-		{
-			Flip();
-		}
-			
-		if (_isGrounded && jump)
+		
+		if (_isGrounded && jump && _action <= Action.JUMP)
 		{
 			// Add a vertical force to the player.
 			_isGrounded = false;
 			m_Rigidbody2D.AddForce(new Vector2(0f, m_JumpForce));
 			_animator.SetBool("Grounded", false);
+		}
+		
+		if ( (move > 0 && !m_FacingRight) || (move < 0 && m_FacingRight))
+		{
+			Flip();
 		}
 
 	}
@@ -175,10 +168,8 @@ public class MovementController : MonoBehaviour
 
 	private void Flip()
 	{
-		// Switch the way the player is labelled as facing.
 		m_FacingRight = !m_FacingRight;
-
-		// Multiply the player's x local scale by -1.
+		
 		Vector3 theScale = transform.localScale;
 		theScale.x *= -1;
 		transform.localScale = theScale;
@@ -187,6 +178,17 @@ public class MovementController : MonoBehaviour
 	private void PriorityAction(Action checkPriority)
 	{
 		_action = (_action > checkPriority) ? _action : checkPriority; 
+	}
+
+	public void PriorityReset()
+	{
+		_action = Action.IDLE; 
+	}
+
+	public void Land()
+	{
+		_animator.SetBool("Grounded", true);
+		PriorityReset();
 	}
 	
 }
