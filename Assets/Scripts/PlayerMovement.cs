@@ -54,7 +54,8 @@ public class PlayerMovement : MonoBehaviour
         }
         else if (_isSliding)
         {
-            // Do nothing, just sliding    
+            // Do nothing, just sliding  
+            Debug.Log("waiting");
         }
         else
         {

@@ -6,8 +6,8 @@ public class MovementController : MonoBehaviour
 {
 	[SerializeField] private float m_JumpForce = 400f;							// Amount of force added when the player jumps.
 	[Range(0, 1)] [SerializeField] private float m_CrouchSpeed = .36f;			// Amount of maxSpeed applied to crouching movement. 1 = 100%
-	[Range(0, 1)] [SerializeField] private float m_SlideSpeed = .5f;
 	[Range(0, .3f)] [SerializeField] private float m_MovementSmoothing = .05f;	// How much to smooth out the movement
+	[SerializeField] private float m_SlideSpeed = 20f;
 	[SerializeField] private bool m_AirControl = false;							// Whether or not a player can steer while jumping;
 	[SerializeField] private LayerMask m_WhatIsGround;							// A mask determining what is ground to the character
 	[SerializeField] private Transform m_GroundCheck;							// A position marking where to check if the player is grounded.
@@ -134,7 +134,7 @@ public class MovementController : MonoBehaviour
 		}
 
 		// Run 
-		if (!_isSliding)
+		if (_action != Action.SLIDE)
 		{
 			SetSpeed(move);
 			
@@ -192,7 +192,7 @@ public class MovementController : MonoBehaviour
 		if (m_FacingRight)
 			m_Rigidbody2D.AddForce(new Vector2(m_SlideSpeed, 0));
 		else 
-			m_Rigidbody2D.AddForce(new Vector2(m_SlideSpeed, 0));
+			m_Rigidbody2D.AddForce(new Vector2(-m_SlideSpeed, 0));
 		_animator.SetBool("Slide", true);
 	}
 
