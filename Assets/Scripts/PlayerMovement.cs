@@ -15,6 +15,8 @@ public class PlayerMovement : MonoBehaviour
     private bool _crouch = false;
     private bool _slide = false;
     private bool _isSliding = false;
+    private bool _roll = false; 
+    private bool _isRolling = false; 
     [SerializeField] private float _timeSlide;
 
     void Update()
@@ -30,6 +32,11 @@ public class PlayerMovement : MonoBehaviour
         {
             _slide = true; 
         }
+
+        if (Input.GetButtonDown("Roll"))
+        {
+            _roll = true; 
+        }
         
         if (Input.GetButtonDown("Crouch"))
         {
@@ -39,47 +46,64 @@ public class PlayerMovement : MonoBehaviour
         {
             _crouch = false; 
         }
-        
-        
     }
 
     private void FixedUpdate()
     {
         bool canSlide = (controller._action == MovementController.Action.IDLE ||
                          controller._action == MovementController.Action.CROUCH ||
-                         controller._action == MovementController.Action.MANDATORY_CROUNCH); 
+                         controller._action == MovementController.Action.MANDATORY_CROUNCH ||
+                         controller._action == MovementController.Action.MOVEMENT);
+
+        bool canRoll = _horizontalMove != 0 && controller._action == MovementController.Action.IDLE; 
         
         
-        if (_slide && !_isSliding)
+        if (_roll && !_isRolling)
         {
-            if (canSlide)
+            if (canRoll)
+            {
+                Debug.Log("in");
+                _isRolling = true;
+                controller.Roll(_horizontalMove * Time.fixedDeltaTime); 
+            }
+            else
+                Debug.Log("false");
+        }
+        else if (_slide && !_isSliding)
+        {
+           if (canSlide)
             {
                 _isSliding = true; 
                 controller.Slide();
                 StartCoroutine("StopSlideCall", _timeSlide);
             }
-
         }
         else if (_isSliding)
         {
             // Do nothing, just sliding  
-            Debug.Log("waiting");
         }
         else
         {
             controller.Move(_horizontalMove * Time.fixedDeltaTime, _crouch, _jump);
         }
         
+        // Reseting parameters 
         _jump = false;
-        _slide = false; 
+        _slide = false;
+        _roll = false; 
     }
 
     private IEnumerator StopSlideCall()
     {
         yield return new WaitForSeconds(_timeSlide);
-        Debug.Log("stop slide");
         _isSliding = false; 
         controller.StopSlide();
+    }
+
+    public void StopRollCall()
+    {
+        _isRolling = false;
+        controller.StopRoll(); 
     }
 
 

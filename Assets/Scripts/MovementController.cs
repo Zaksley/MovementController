@@ -20,7 +20,8 @@ public class MovementController : MonoBehaviour
 	private bool _wasGrounded = true;
 
 	private bool _isSliding = false;
-
+	private bool _isRolling = false; 
+	
 	private bool _wasRunning = false;
 
 	private Animator _animator;
@@ -28,10 +29,12 @@ public class MovementController : MonoBehaviour
 	public enum Action
 	{
 		IDLE = 0,
-		CROUCH = 1, 
-		JUMP = 2,
-		MANDATORY_CROUNCH = 3,
-		SLIDE = 4,
+		MOVEMENT = 1,
+		CROUCH = 2, 
+		JUMP = 3,
+		MANDATORY_CROUNCH = 4,
+		SLIDE = 5,
+		ROLL = 6,
 	}; 
 	
 	private Rigidbody2D m_Rigidbody2D;
@@ -134,7 +137,7 @@ public class MovementController : MonoBehaviour
 		}
 
 		// Run 
-		if (_action != Action.SLIDE)
+		if (_action != Action.SLIDE && _action != Action.ROLL)
 		{
 			SetSpeed(move);
 			
@@ -157,7 +160,6 @@ public class MovementController : MonoBehaviour
 			
 			if ( (move > 0 && !m_FacingRight) || (move < 0 && m_FacingRight))
 			{
-				Debug.Log("FLIP");
 				Flip();
 			}
 		}
@@ -184,15 +186,33 @@ public class MovementController : MonoBehaviour
 			m_Rigidbody2D.AddForce(new Vector2(-m_SlideSpeed, 0));
 		_animator.SetBool("Slide", true);
 	}
-
+	
 	public void StopSlide()
 	{
-		// Stop player 
 		_action = Action.IDLE; 
 		SetColliders();
 		SetSpeed(0);
 		_isSliding = false;
 		_animator.SetBool("Slide", false);
+	}
+	
+	public void Roll(float move)
+	{
+		Debug.Log("roll roll roll");
+		_action = Action.ROLL; 
+		SetColliders();
+		SetSpeed(move);
+		_isRolling = true;
+		_animator.SetBool("Roll", true);
+	}
+
+	public void StopRoll()
+	{
+		_action = Action.IDLE;
+		SetColliders();
+		SetSpeed(0);
+		_isRolling = false;
+		_animator.SetBool("Roll", false);
 	}
 	
 	private void Flip()
@@ -218,7 +238,7 @@ public class MovementController : MonoBehaviour
 			PriorityAction(Action.MANDATORY_CROUNCH);
 		}
 		
-		if (_action == Action.MANDATORY_CROUNCH || _action == Action.CROUCH || _action == Action.SLIDE)
+		if (_action == Action.MANDATORY_CROUNCH || _action == Action.CROUCH || _action == Action.SLIDE || _action == Action.ROLL)
 		{
 			if (m_CrouchDisableCollider != null)
 				m_CrouchDisableCollider.enabled = false;
