@@ -15,7 +15,7 @@ public class PlayerMovement : MonoBehaviour
     private bool _crouch = false;
     private bool _slide = false;
     private bool _isSliding = false;
-    [SerializeField] private float _timeSlide; 
+    [SerializeField] private float _timeSlide;
 
     void Update()
     {
@@ -45,12 +45,20 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
+        bool canSlide = (controller._action == MovementController.Action.IDLE ||
+                         controller._action == MovementController.Action.CROUCH ||
+                         controller._action == MovementController.Action.MANDATORY_CROUNCH); 
+        
+        
         if (_slide && !_isSliding)
         {
-            Debug.Log("try to slide");
-            _isSliding = true; 
-            controller.Slide();
-            StartCoroutine("StopSlideCall", _timeSlide); 
+            if (canSlide)
+            {
+                _isSliding = true; 
+                controller.Slide();
+                StartCoroutine("StopSlideCall", _timeSlide);
+            }
+
         }
         else if (_isSliding)
         {

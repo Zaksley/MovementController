@@ -24,14 +24,14 @@ public class MovementController : MonoBehaviour
 	private bool _wasRunning = false;
 
 	private Animator _animator;
-	private Action _action; 
-	private enum Action
+	public Action _action; 
+	public enum Action
 	{
 		IDLE = 0,
 		CROUCH = 1, 
 		JUMP = 2,
-		SLIDE = 3,
-		MANDATORY_CROUNCH = 4,
+		MANDATORY_CROUNCH = 3,
+		SLIDE = 4,
 	}; 
 	
 	private Rigidbody2D m_Rigidbody2D;
@@ -169,18 +169,7 @@ public class MovementController : MonoBehaviour
 			m_Rigidbody2D.AddForce(new Vector2(0f, m_JumpForce));
 			_animator.SetBool("Grounded", false);
 		}
-		// Slide 
-		/*
-		else if (_isGrounded && slide && !_wasSliding && _action <= Action.SLIDE)
-		{
-			SetSpeed(move * m_SlideSpeed);
-			_isSliding = true;
-			_wasSliding = true; 
-			m_Rigidbody2D.AddForce(new Vector2(m_SlideSpeed, 0));
-			_animator.SetBool("Slide", true);
-		}*/
 		
-
 	}
 
 	public void Slide()
